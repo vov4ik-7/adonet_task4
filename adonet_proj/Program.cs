@@ -16,6 +16,15 @@ namespace adonet_proj
             Context context = new Context(connectionString);
 
             context.AllInfoID8();
+            context.ListFLNameLondon();
+            context.ListFLNameA();
+            context.ListFLAge55();
+            context.CountEmployeesLondon();
+            context.MaxMinAvgAgeLondon();
+            context.MaxMinAvgAgeEachCity();
+            context.ListCitiesAvgAge60();
+            context.EldestEmployees();
+            context.ThreeEldestEmployees();
 
             Console.ReadKey();
         }

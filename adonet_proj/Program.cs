@@ -35,6 +35,16 @@ namespace adonet_proj
             context.FrenchCustomersMoreThan1OrderGrouping();
             context.FrenchCustomersMoreThan1Order();
             context.CustomersOrderedTofu();
+            context.CustomersOrderedTofuWithTotalAmountSum();
+            context.FrenchCustomersNonFrenchProductsLeft();
+            context.FrenchCustomersNonFrenchProducts();
+            context.FrenchCustomersFrenchProducts();
+            context.TotalSum();
+            context.TotalSumNDomestic();
+            context.ProductCategories1997();
+            context.ProductsHistoryUnitPrices();
+            context.EmployeesAndChiefs();
+            context.CitiesWhereOrdersMadeTo();
 
             Console.ReadKey();
         }

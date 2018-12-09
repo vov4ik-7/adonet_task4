@@ -319,5 +319,229 @@ namespace adonet_proj
 
             reader.Close();
         }
+
+        public void CustomersOrderedTofuWithTotalAmountSum()
+        {
+            Console.WriteLine("\n> 21.	*Show the list of customers’ names who used to order the ‘Tofu’ product, along with the total amount of the product they have ordered " +
+                "and with the total sum for ordered product calculated.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"SELECT C.ContactName, SUM(OD.Quantity) AS Count, SUM(OD.UnitPrice * OD.Quantity) AS PriceSum 
+                                                 FROM Customers AS C 
+                                                 LEFT JOIN Orders AS O ON C.CustomerID = O.CustomerID 
+                                                 LEFT JOIN [Order Details] AS OD ON OD.OrderId = O.OrderId
+                                                 LEFT JOIN [Products] AS P ON P.ProductID = OD.ProductID 
+                                                 WHERE P.ProductName = 'Tofu'
+                                                 GROUP BY C.ContactName;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["ContactName"]}, orders count: {reader["Count"]}, sum: {reader["PriceSum"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void FrenchCustomersNonFrenchProductsLeft()
+        {
+            Console.WriteLine("\n> 22.*Show the list of french customers’ names who used to order non-french products (use left join).\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"SELECT DISTINCT C.ContactName 
+                                                 FROM Customers as C 
+                                                 LEFT JOIN Orders AS O ON C.CustomerID = O.CustomerID 
+                                                 LEFT JOIN [Order Details] AS OD ON O.OrderID = OD.OrderID 
+                                                 LEFT JOIN [Products] AS P ON OD.ProductID = P.ProductID 
+                                                 LEFT JOIN [Suppliers] AS S ON P.SupplierID = S.SupplierID 
+                                                 WHERE S.Country <> 'France' AND C.Country = 'France'";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["ContactName"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void FrenchCustomersNonFrenchProducts()
+        {
+            Console.WriteLine("\n> 23.*Show the list of french customers’ names who used to order non-french products.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"select distinct Customers.ContactName 
+             from Customers 
+             inner join Orders  
+             on Customers.CustomerID=Orders.CustomerID 
+             inner join [Order Details] 
+             on [Order Details].OrderID=Orders.OrderID 
+             inner join Products 
+             on [Order Details].ProductID = Products.ProductID
+             inner join Suppliers
+             on Products.SupplierID = Suppliers.SupplierID 
+             where Customers.Country = 'France' AND Suppliers.Country != 'France' AND Customers.ContactName not in 
+             (select distinct Customers.ContactName 
+             from Customers 
+             inner join Orders  
+             on Customers.CustomerID=Orders.CustomerID 
+             inner join [Order Details] 
+             on [Order Details].OrderID=Orders.OrderID 
+             inner join Products 
+             on [Order Details].ProductID = Products.ProductID
+             inner join Suppliers
+             on Products.SupplierID = Suppliers.SupplierID 
+             where Customers.Country = 'France' AND Suppliers.Country = 'France')";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["ContactName"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void FrenchCustomersFrenchProducts()
+        {
+            Console.WriteLine("\n> 24.*Show the list of french customers’ names who used to order french products.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"select distinct Customers.ContactName from Customers inner join Orders on Customers.CustomerID=Orders.CustomerID 
+            inner join [Order Details] on [Order Details].OrderID=Orders.OrderID inner join Products on [Order Details].ProductID = Products.ProductID 
+            inner join Suppliers on Products.SupplierID = Suppliers.SupplierID where Customers.Country = 'France' AND Suppliers.Country = 'France'";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["ContactName"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void TotalSum()
+        {
+            Console.WriteLine("\n> 25.*Show the total ordering sum calculated for each country of customer.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"SELECT Customers.Country, SUM(([Order Details].UnitPrice*[Order Details].Quantity)*(1-[Order Details].Discount)) AS sumOfOrders 
+            FROM Customers 
+            JOIN Orders ON Orders.CustomerID = Customers.CustomerID 
+            Join [Order Details] on [Order Details].OrderID = Orders.OrderID
+            GROUP BY Customers.Country;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["Country"]}, sum: {reader["sumOfOrders"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void TotalSumNDomestic()
+        {
+            Console.WriteLine("\n> 26.*Show the total ordering sums calculated for each customer’s" +
+                " country for domestic and non-domestic products separately (e.g.: “France – " +
+                "French products ordered – Non-french products ordered” and so on for each country).\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"SELECT Dom.Country, Dom.DomSum, NonDom.NonDomSum 
+            FROM (select Customers.Country, SUM(([Order Details].UnitPrice*[Order Details].Quantity)*(1-[Order Details].Discount)) AS DomSUM
+            From Customers 
+            join Orders On Customers.CustomerID = Orders.CustomerID
+            join [Order Details] ON [Order Details].OrderID = Orders.OrderID
+            join Products On Products.ProductID = [Order Details].ProductID
+            join Suppliers On Suppliers.SupplierID = Products.SupplierID
+            where Suppliers.Country = Customers.Country
+            Group BY Customers.Country) As Dom
+            Join (select Customers.Country, SUM(([Order Details].UnitPrice*[Order Details].Quantity)*(1-[Order Details].Discount)) AS NonDomSUM
+            From Customers 
+            join Orders On Customers.CustomerID = Orders.CustomerID
+            join [Order Details] ON [Order Details].OrderID = Orders.OrderID
+            join Products On Products.ProductID = [Order Details].ProductID
+            join Suppliers On Suppliers.SupplierID = Products.SupplierID
+            where Suppliers.Country <> Customers.Country
+            Group BY Customers.Country) As NonDom
+            On Dom.Country = NonDom.Country;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["Country"]}, sum of domestic products: {reader["DomSum"]}, sum of non-domestic: {reader["NonDomSum"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void ProductCategories1997()
+        {
+            Console.WriteLine("\n> 27.	*Show the list of product categories along with total ordering sums " +
+                "calculated for the orders made for the products of each category, during the year 1997.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"Select Categories.CategoryName, SUM(([Order Details].UnitPrice*[Order Details].Quantity)*(1-[Order Details].Discount)) AS sumOfOrders 
+            From Categories
+            Join Products On Categories.CategoryID = Products.CategoryID
+            join [Order Details] On [Order Details].ProductID = products.ProductID
+            join Orders On Orders.OrderID = [Order Details].OrderID
+            where Orders.OrderDate BETWEEN '1997-01-01' AND '1997-12-31'
+            Group By Categories.CategoryName;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["CategoryName"]} {reader["sumOfOrders"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void ProductsHistoryUnitPrices()
+        {
+            Console.WriteLine("\n> 28.*Show the list of product names along with unit prices and the history of " +
+                "unit prices taken from the orders (show ‘Product name – Unit price – Historical price’)." +
+                " The duplicate records should be eliminated. If no orders were made " +
+                "for a certain product, then the result for this " +
+                "product should look like ‘Product name – Unit price – NULL’. Sort the list by the product name.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"Select distinct Products.ProductName,Products.UnitPrice, [Order Details].UnitPrice As HistoricalPrice 
+            From Products
+            Left Join [Order Details] On Products.ProductID = [Order Details].ProductID
+            Group by Products.ProductName,Products.UnitPrice,[Order Details].UnitPrice
+            Order by Products.ProductName;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["ProductName"]} {reader["UnitPrice"]} {reader["HistoricalPrice"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void EmployeesAndChiefs()
+        {
+            Console.WriteLine("\n> 29.*Show the list of employees’ names along with names of their chiefs (use left join with the same table).\n");
+            command = connection.CreateCommand();
+            command.CommandText = "select e.FirstName + ' ' + e.LastName as FullNameEmployee," +
+                            " c.FirstName + ' '+c.LastName as FullNameChief " +
+                            "from Employees as e " +
+                            "left join employees as c " +
+                            "on e.reportsto = c.employeeid";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["FullNameEmployee"]}, chief {reader["FullNameChief"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void CitiesWhereOrdersMadeTo()
+        {
+            Console.WriteLine("\n> 30.*Show the list of cities where employees and customers are from and where orders have been made to. Duplicates should be eliminated.\n");
+            command = connection.CreateCommand();
+            command.CommandText = "(select city from Customers) " +
+                            "union " +
+                            "(select city from Employees) " +
+                            "union " +
+                            "(select s.city from products as p " +
+                            "inner join suppliers as s on " +
+                            "p.supplierid = s.SupplierID); ";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["city"]}");
+            }
+
+            reader.Close();
+        }
     }
 }

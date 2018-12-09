@@ -25,6 +25,16 @@ namespace adonet_proj
             context.ListCitiesAvgAge60();
             context.EldestEmployees();
             context.ThreeEldestEmployees();
+            context.AllCities();
+            context.EmployeesBirthdaysThisMonth();
+            context.EmployeesSnippedToMadrid();
+            context.EmployeesOrders1997();
+            context.EmployeesOrdersCount1997();
+            context.EmployeesOrdersCountAfterRequiredDate1997();
+            context.OrdersCountFrance();
+            context.FrenchCustomersMoreThan1OrderGrouping();
+            context.FrenchCustomersMoreThan1Order();
+            context.CustomersOrderedTofu();
 
             Console.ReadKey();
         }

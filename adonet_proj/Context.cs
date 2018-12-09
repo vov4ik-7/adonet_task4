@@ -158,5 +158,166 @@ namespace adonet_proj
 
             reader.Close();
         }
+
+        public void AllCities()
+        {
+            Console.WriteLine("\n> 11.Show the list of all cities where the employees are from.");
+            command = connection.CreateCommand();
+            command.CommandText = "SELECT DISTINCT City FROM Employees;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["City"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void EmployeesBirthdaysThisMonth()
+        {
+            Console.WriteLine("\n> 12. Show first, last names and dates of birth of the employees who celebrate their birthdays this month \n");
+            command = connection.CreateCommand();
+            command.CommandText = "SELECT FirstName, LastName, BirthDate FROM Employees WHERE MONTH(BirthDate) = 12;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["FirstName"]} {reader["LastName"]}, Birth date: {reader["BirthDate"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void EmployeesSnippedToMadrid()
+        {
+            Console.WriteLine("\n> 13. Show first and last names of the employees who used to serve orders shipped to Madrid. \n");
+            command = connection.CreateCommand();
+            command.CommandText = "SELECT DISTINCT FirstName, LastName FROM Employees JOIN Orders ON Employees.EmployeeID = Orders.EmployeeID WHERE ShipCity = 'Madrid';";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["FirstName"]} {reader["LastName"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void EmployeesOrders1997()
+        {
+            Console.WriteLine("\n> 14. Show first and last names of the employees as well as the count of orders each of them have received during the year 1997 (use left join). \n");
+            command = connection.CreateCommand();
+            command.CommandText = "SELECT E.FirstName, E.LastName, COUNT(O.EmployeeID) AS OrdersAmount FROM Employees AS E LEFT JOIN Orders AS O ON O.EmployeeID = E.EmployeeID WHERE O.OrderDate BETWEEN '1997-01-01' AND '1997-12-31' GROUP BY E.FirstName, E.LastName;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["FirstName"]} {reader["LastName"]}, orders count: {reader["OrdersAmount"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void EmployeesOrdersCount1997()
+        {
+            Console.WriteLine("\n> 15. Show first and last names of the employees as well as the count of " +
+                "orders each of them have received during the year 1997\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"SELECT Employees.FirstName, Employees.LastName, COUNT(Orders.EmployeeID) AS numOfOrders
+            FROM Employees
+            JOIN Orders ON Orders.EmployeeID = Employees.EmployeeID
+            WHERE Orders.OrderDate BETWEEN '1997-01-01' AND '1997-12-31'
+            GROUP BY Employees.FirstName, Employees.LastName;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["FirstName"]} {reader["LastName"]}, orders count: {reader["numOfOrders"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void EmployeesOrdersCountAfterRequiredDate1997()
+        {
+            Console.WriteLine("\n> 16.Show first and last names of the employees as well as the count of their " +
+                "orders shipped after required date during the year 1997 (use left join).\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"SELECT Employees.FirstName, Employees.LastName, COUNT(Orders.EmployeeID) AS numOfOrders 
+            FROM Employees 
+            LEFT JOIN Orders ON Orders.EmployeeID = Employees.EmployeeID 
+            WHERE Orders.OrderDate BETWEEN '1997-01-01' AND '1997-12-31' AND Orders.ShippedDate > Orders.RequiredDate 
+            GROUP BY Employees.FirstName, Employees.LastName;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"{reader["FirstName"]} {reader["LastName"]}, orders count: {reader["numOfOrders"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void OrdersCountFrance()
+        {
+            Console.WriteLine("\n> 17.Show the count of orders made by each customer from France.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"SELECT Customers.CustomerID, COUNT(Orders.CustomerID) AS numOfOrders 
+            FROM Customers 
+            JOIN Orders ON Orders.CustomerID = Customers.CustomerID 
+            WHERE Customers.Country = 'France'
+            GROUP BY Customers.CustomerID;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"CustomerID: {reader["CustomerID"]}, orders count {reader["numOfOrders"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void FrenchCustomersMoreThan1OrderGrouping()
+        {
+            Console.WriteLine("\n> 18. Show the list of french customers’ names who have made more than one order(use grouping).\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"SELECT C.ContactName 
+            FROM Customers AS C 
+            JOIN Orders AS O ON O.CustomerID = C.CustomerID
+            WHERE C.Country = 'France'
+            GROUP BY C.ContactName       
+            HAVING COUNT (O.CustomerID) > 1;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"Customer: {reader["ContactName"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void FrenchCustomersMoreThan1Order()
+        {
+            Console.WriteLine("\n> 19.Show the list of french customers’ names who have made more than one order.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"select Customers.ContactName from Customers inner join Orders on Customers.CustomerID = Orders.CustomerID 
+            where Customers.Country = 'France' Group By(Customers.ContactName)  HAVING(COUNT(Orders.CustomerID) > 1) ;";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"Customer: {reader["ContactName"]}");
+            }
+
+            reader.Close();
+        }
+
+        public void CustomersOrderedTofu()
+        {
+            Console.WriteLine("\n> 20.Show the list of customers’ names who used to order the ‘Tofu’ product.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"select Customers.ContactName from Customers inner join Orders  on Customers.CustomerID=Orders.CustomerID inner join [Order Details] on [Order Details].OrderID=Orders.OrderID 
+            inner join Products on [Order Details].ProductID = Products.ProductID where Products.ProductName = 'Tofu';";
+            reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                Console.WriteLine($"Customer: {reader["ContactName"]}");
+            }
+
+            reader.Close();
+        }
     }
 }

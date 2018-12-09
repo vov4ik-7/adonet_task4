@@ -10,7 +10,7 @@ namespace adonet_proj
 {
     public class Context
     {
-        private string connectionString;
+        private string connectionString = @"Data Source = (localdb)\MSSQLLocalDB; Initial Catalog = Northwind; Integrated Security = True; Connect Timeout = 30; Encrypt = False; TrustServerCertificate = False; ApplicationIntent = ReadWrite; MultiSubnetFailover = False";
         private SqlConnection connection;
         private SqlCommand command;
         private SqlDataReader reader;
@@ -20,7 +20,11 @@ namespace adonet_proj
             connection = new SqlConnection(connectionStr);
             connection.Open();
         }
-
+        public Context()
+        {
+            connection = new SqlConnection(connectionString);
+            connection.Open();
+        }
         public void AllInfoID8()
         {
             Console.WriteLine("> 1.Show all info about the employee with ID 8.");
@@ -271,9 +275,10 @@ namespace adonet_proj
             reader.Close();
         }
 
-        public void FrenchCustomersMoreThan1OrderGrouping()
+        public virtual List<string[]> FrenchCustomersMoreThan1OrderGrouping()
         {
             Console.WriteLine("\n> 18. Show the list of french customers’ names who have made more than one order(use grouping).\n");
+            List<string[]> result = new List<string[]>();
             command = connection.CreateCommand();
             command.CommandText = @"SELECT C.ContactName 
             FROM Customers AS C 
@@ -282,12 +287,21 @@ namespace adonet_proj
             GROUP BY C.ContactName       
             HAVING COUNT (O.CustomerID) > 1;";
             reader = command.ExecuteReader();
+            int inRow = 1;
+            
             while (reader.Read())
             {
+                string[] s = new string[inRow];
                 Console.WriteLine($"Customer: {reader["ContactName"]}");
-            }
+                for (int i = 0; i < inRow; ++i)
+                {
+                    s[i] = reader[i].ToString();
+                }
+                result.Add(s);
+            }     
 
             reader.Close();
+            return result;
         }
 
         public void FrenchCustomersMoreThan1Order()
@@ -542,6 +556,70 @@ namespace adonet_proj
             }
 
             reader.Close();
+        }
+
+        public void InsertIntoEmployees()
+        {
+            Console.WriteLine("\n> 31.*Insert 5 new records into Employees table. Fill in the following  fields: LastName, FirstName, BirthDate, HireDate, Address, City, Country, Notes. The Notes field should contain your own name.\n");
+            command = connection.CreateCommand();
+            command.CommandText = "insert into employees(LastName, FirstName, BirthDate, HireDate, Address, City, Country, Notes) " +
+            "values " +
+            "('Volodymyr', 'Kek', Convert(datetime, '1999-03-23'), Convert(datetime, '2015-10-29'), 'Kyivska 10 str.', 'Dublyani', 'Ukraine', 'Alek'), " +
+            "('Olek', 'Wou', Convert(datetime, '1999-03-23'), Convert(datetime, '2015-10-29'), 'Kyivska 11 str.', 'Lviv', 'Ukraine', 'Alek') , " +
+            "('Vasya', 'Kou', Convert(datetime, '1999-03-23'), Convert(datetime, '2015-10-29'), 'Kyivska 12 str.', 'Lviv', 'Ukraine', 'Alek') , " +
+            "('Danil', 'Aqweewr', Convert(datetime, '1999-03-23'), Convert(datetime, '2015-10-29'), 'Kyivska 13 str.', 'Mostiska', 'Ukraine', 'Alek') , " +
+            "('Pezvzxcvtro', 'Vcbvcb', Convert(datetime, '1999-03-23'), Convert(datetime, '2015-10-29'), 'Kyivska 14 str.', 'Lviv', 'Ukraine', 'Alek');";
+            int rowsAffected = command.ExecuteNonQuery();
+            Console.Write($"Rows affected : {rowsAffected}\n");
+
+            reader.Close();
+        }
+
+        public void SelectInsertedRecords()
+        {
+            Console.WriteLine("\n> 32.Fetch the records you have inserted by the SELECT statement.\n");
+            command = connection.CreateCommand();
+            command.CommandText = "select * from employees where cast(notes as nvarchar) = 'Alek'";
+            SqlDataReader sqlData32 = command.ExecuteReader();
+            while (sqlData32.Read())
+            {
+                var employeeid = (int)sqlData32.GetValue(0);
+                for (int i = 0; i < sqlData32.FieldCount; i++)
+                {
+                    Console.Write($"{sqlData32.GetValue(i)} ");
+                }
+
+                Console.WriteLine();
+            }
+            sqlData32.Close();
+        }
+
+        public void UpdateRecord()
+        {
+            Console.WriteLine("\n> 33.*Change the City field in one of your records using the UPDATE statement.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"update employees set city = 'Kyiv' 
+            where employeeid = (select top 1 employeeid from employees where cast(notes as nvarchar) = 'Alek')";
+            int rowsAffected = command.ExecuteNonQuery();
+            Console.WriteLine($"Rows affected : {rowsAffected}\n");
+        }
+
+        public void ChangeHireDate()
+        {
+            Console.WriteLine("\n> 34.*Change the HireDate field in all your records to current date.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"update employees set hiredate = GETDATE() where cast(notes as nvarchar) = 'Alek'";
+            int rowsAffected = command.ExecuteNonQuery();
+            Console.WriteLine($"Rows affected : {rowsAffected}\n");
+        }
+
+        public void Delete1Inserted()
+        {
+            Console.WriteLine("\n> 35.*Delete one of your records.\n");
+            command = connection.CreateCommand();
+            command.CommandText = @"delete from employees where employeeid = (select top 1 employeeid from employees where cast(notes as nvarchar) = 'Alek')";
+            int rowsAffected = command.ExecuteNonQuery();
+            Console.WriteLine($"Rows affected : {rowsAffected}\n");
         }
     }
 }

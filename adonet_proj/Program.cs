@@ -45,6 +45,11 @@ namespace adonet_proj
             context.ProductsHistoryUnitPrices();
             context.EmployeesAndChiefs();
             context.CitiesWhereOrdersMadeTo();
+            //context.InsertIntoEmployees();
+            context.SelectInsertedRecords();
+            context.UpdateRecord();
+            context.ChangeHireDate();
+            //context.Delete1Inserted();
 
             Console.ReadKey();
         }
